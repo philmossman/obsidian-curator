@@ -7,12 +7,13 @@
  *   obsidian-curator done "search term"
  */
 
-const { loadConfig } = require('../../core/config');
-const { info, error, muted } = require('../helpers');
+const { loadConfig }   = require('../../core/config');
+const VaultClient       = require('../../core/vault-client');
+const Curator           = require('../../core/curator');
+const { info, error, success, muted, warn } = require('../helpers');
 
 /**
  * @param {Object} args - Parsed arguments
- * @param {string[]} args._ - Search term words
  * @returns {Promise<void>}
  */
 async function doneCommand(args) {
@@ -32,9 +33,33 @@ async function doneCommand(args) {
     process.exit(1);
   }
 
-  info('Task completion not yet implemented (coming in Phase 3).');
-  muted(`Search term: ${searchTerm}`);
-  muted(`Tasks folder: ${config.tasks.folder}`);
+  let curator;
+  try {
+    const vault = new VaultClient(config.vault);
+    curator     = new Curator({ vault, ai: null, config });
+  } catch (err) {
+    error(`Connection failed: ${err.message}`);
+    process.exit(1);
+  }
+
+  let result;
+  try {
+    result = await curator.completeTask(searchTerm);
+  } catch (err) {
+    error(`Failed to complete task: ${err.message}`);
+    process.exit(1);
+  }
+
+  if (result.ok) {
+    success(result.message);
+    if (result.task) {
+      muted(`  Path: ${result.task.path}`);
+      muted(`  Completed: ${result.task.completed}`);
+    }
+  } else {
+    warn(result.message);
+    muted('Try a different search term or check `obsidian-curator tasks`');
+  }
 }
 
 module.exports = doneCommand;

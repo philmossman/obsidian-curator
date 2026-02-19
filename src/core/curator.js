@@ -4,7 +4,7 @@
  * Curator — main orchestrator class.
  *
  * Wires together a VaultClient, an AI adapter, and configuration.
- * Feature methods are stubbed here; full implementations come in Phase 3.
+ * Each feature method delegates to its dedicated feature module.
  *
  * Usage:
  *   const { VaultClient, Curator, createAIAdapter, loadConfig } = require('obsidian-curator');
@@ -14,6 +14,15 @@
  *   const curator = new Curator({ vault, ai, config });
  */
 
+const { capture: captureNote }  = require('../features/capture');
+const Processor                  = require('../features/processor');
+const Filer                      = require('../features/filer');
+const { StructureAuditor }       = require('../features/auditor');
+const { runTidy }                = require('../features/tidy/executor');
+const TaskStore                  = require('../features/tasks/store');
+const { parseTask }              = require('../features/tasks/parser');
+const { generateTaskBrief }      = require('../features/tasks/briefing');
+
 class Curator {
   /**
    * @param {Object} deps
@@ -22,16 +31,21 @@ class Curator {
    * @param {Object}                  deps.config - Loaded curator config
    */
   constructor({ vault, ai, config }) {
-    if (!vault) throw new Error('Curator requires a vault (VaultClient instance)');
+    if (!vault)  throw new Error('Curator requires a vault (VaultClient instance)');
     if (!config) throw new Error('Curator requires a config object');
 
-    this.vault = vault;
-    this.ai = ai || null;
+    this.vault  = vault;
+    this.ai     = ai || null;
     this.config = config;
+
+    // Lazy-initialised feature instances
+    this._processor  = null;
+    this._filer      = null;
+    this._taskStore  = null;
   }
 
   // ─────────────────────────────────────────────
-  // Phase 2: Quick capture
+  // Quick capture (no AI required)
   // ─────────────────────────────────────────────
 
   /**
@@ -42,34 +56,138 @@ class Curator {
    * @returns {Promise<string>} Path of the created note
    */
   async capture(text, options = {}) {
-    if (!text || !text.trim()) {
-      throw new Error('capture() requires non-empty text');
+    return captureNote(this.vault, this.config, text, options);
+  }
+
+  // ─────────────────────────────────────────────
+  // Process (AI)
+  // ─────────────────────────────────────────────
+
+  /**
+   * Enrich inbox notes with AI-generated frontmatter (tags, summary, folder).
+   * @param {Object} [options]
+   * @param {number}  [options.limit=10]
+   * @param {boolean} [options.dryRun=false]
+   * @param {boolean} [options.force=false] - Re-process already-processed notes
+   * @returns {Promise<Object>} Results summary
+   */
+  async process(options = {}) {
+    if (!this._processor) {
+      this._processor = new Processor(this.vault, this.ai, this.config);
     }
+    return this._processor.processInbox(options);
+  }
 
-    const source = options.source || 'cli';
-    const now    = new Date();
+  // ─────────────────────────────────────────────
+  // File (AI)
+  // ─────────────────────────────────────────────
 
-    // Build filename: slugified first 6 words + ISO timestamp
-    const slug = Curator._slugify(text);
-    const ts   = Curator._isoStamp(now);        // e.g. 20240315-143022
-    const inboxFolder = (this.config.structure && this.config.structure.folders && this.config.structure.folders.inbox) || 'inbox';
-    const notePath = `${inboxFolder}/${slug}-${ts}.md`;
+  /**
+   * Route processed inbox notes to their correct vault folders.
+   * @param {Object} [options]
+   * @param {number}  [options.limit=10]
+   * @param {number}  [options.minConfidence=0.7]
+   * @param {boolean} [options.dryRun=false]
+   * @param {string}  [options.sessionId]
+   * @returns {Promise<Object>} Results summary
+   */
+  async file(options = {}) {
+    if (!this._filer) {
+      this._filer = new Filer(this.vault, this.ai, this.config);
+    }
+    return this._filer.fileNotes(options);
+  }
 
-    const frontmatter = {
-      created: now.toISOString(),
-      source,
-      tags: []
-    };
+  // ─────────────────────────────────────────────
+  // Audit (no AI required)
+  // ─────────────────────────────────────────────
 
-    const content = this.vault.buildNote(frontmatter, text);
-    await this.vault.writeNote(notePath, content);
+  /**
+   * Check vault structure against configured canonical folders.
+   * @param {Object} [options]
+   * @returns {Promise<Object>} Audit report
+   */
+  async audit(options = {}) {
+    const auditor = new StructureAuditor(this.vault, this.config);
+    return auditor.analyze();
+  }
 
-    return notePath;
+  // ─────────────────────────────────────────────
+  // Tidy (AI optional)
+  // ─────────────────────────────────────────────
+
+  /**
+   * Vault housekeeping: detect and optionally fix duplicates, structure
+   * violations, and dead notes.
+   * @param {Object}   [options]
+   * @param {string[]} [options.checks=['all']] - ['dupes','structure','stubs'] or ['all']
+   * @param {boolean}  [options.dryRun=false]
+   * @param {string}   [options.sessionId]
+   * @returns {Promise<Object>} Tidy report with issues and actions taken
+   */
+  async tidy(options = {}) {
+    return runTidy(this.vault, this.ai, this.config, options);
+  }
+
+  // ─────────────────────────────────────────────
+  // Tasks (no AI required)
+  // ─────────────────────────────────────────────
+
+  /**
+   * List open tasks from the configured tasks folder.
+   * @param {Object} [options]
+   * @param {string} [options.status]   - Filter by status ('open' | 'done')
+   * @param {string} [options.project]  - Filter by project
+   * @param {string} [options.priority] - Filter by priority
+   * @returns {Promise<Array>} Array of task objects
+   */
+  async tasks(options = {}) {
+    const store = this._getTaskStore();
+    return store.listTasks(options);
   }
 
   /**
+   * Create a new task from natural language text.
+   * @param {string} text   - Natural language task description
+   * @returns {Promise<Object>} Created task { path, title, due, project, priority, status }
+   */
+  async createTask(text) {
+    if (!text || !text.trim()) {
+      throw new Error('createTask() requires non-empty text');
+    }
+    const parsed = parseTask(text.trim(), this.config);
+    const store  = this._getTaskStore();
+    return store.createTask({ ...parsed, source: 'cli' });
+  }
+
+  /**
+   * Mark a task as complete by search term or exact path.
+   * @param {string} search - Partial title or exact vault path
+   * @returns {Promise<Object>} { ok, task, message }
+   */
+  async completeTask(search) {
+    if (!search || !search.trim()) {
+      throw new Error('completeTask() requires a search term');
+    }
+    const store = this._getTaskStore();
+    return store.completeTask(search.trim());
+  }
+
+  /**
+   * Generate a formatted task briefing (for daily summaries).
+   * @returns {Promise<string>} Markdown-formatted task brief
+   */
+  async taskBrief() {
+    const store = this._getTaskStore();
+    return generateTaskBrief(store);
+  }
+
+  // ─────────────────────────────────────────────
+  // Static helpers (kept for backwards-compat & tests)
+  // ─────────────────────────────────────────────
+
+  /**
    * Slugify the first few words of a string for use in filenames.
-   * Strips non-alphanumeric chars, lower-cases, joins with hyphens.
    * @param {string} text
    * @param {number} [maxWords=6]
    * @returns {string}
@@ -78,13 +196,13 @@ class Curator {
     return text
       .trim()
       .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')   // keep alphanumeric, spaces, hyphens
+      .replace(/[^a-z0-9\s-]/g, '')
       .trim()
       .split(/\s+/)
       .slice(0, maxWords)
       .join('-')
-      .replace(/-+/g, '-')             // collapse multiple hyphens
-      .replace(/^-|-$/g, '')           // trim leading/trailing hyphens
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
       || 'note';
   }
 
@@ -103,77 +221,14 @@ class Curator {
   }
 
   // ─────────────────────────────────────────────
-  // Phase 3: Process (AI)
+  // Private helpers
   // ─────────────────────────────────────────────
 
-  /**
-   * Enrich inbox notes with AI-generated frontmatter (tags, summary, folder).
-   * @param {Object} [options]
-   * @param {number} [options.limit=10]
-   * @param {boolean} [options.dryRun=false]
-   * @param {boolean} [options.force=false] - Re-process already-processed notes
-   * @returns {Promise<Object>} Results summary
-   */
-  async process(options = {}) {
-    throw new Error('process() not yet implemented — coming in Phase 3');
-  }
-
-  // ─────────────────────────────────────────────
-  // Phase 3: File (AI)
-  // ─────────────────────────────────────────────
-
-  /**
-   * Route processed inbox notes to their correct vault folders.
-   * @param {Object} [options]
-   * @param {number} [options.limit=10]
-   * @param {number} [options.minConfidence=0.7]
-   * @param {boolean} [options.dryRun=false]
-   * @returns {Promise<Object>} Results summary
-   */
-  async file(options = {}) {
-    throw new Error('file() not yet implemented — coming in Phase 3');
-  }
-
-  // ─────────────────────────────────────────────
-  // Phase 3: Audit
-  // ─────────────────────────────────────────────
-
-  /**
-   * Check vault structure against configured canonical folders.
-   * @param {Object} [options]
-   * @returns {Promise<Object>} Audit report
-   */
-  async audit(options = {}) {
-    throw new Error('audit() not yet implemented — coming in Phase 3');
-  }
-
-  // ─────────────────────────────────────────────
-  // Phase 3: Tidy
-  // ─────────────────────────────────────────────
-
-  /**
-   * Vault housekeeping: detect and optionally fix duplicates, structure
-   * violations, and dead notes.
-   * @param {Object} [options]
-   * @param {string[]} [options.checks=['all']] - ['dupes','structure','stubs'] or ['all']
-   * @param {boolean}  [options.dryRun=false]
-   * @returns {Promise<Object>} Tidy report with issues and actions taken
-   */
-  async tidy(options = {}) {
-    throw new Error('tidy() not yet implemented — coming in Phase 3');
-  }
-
-  // ─────────────────────────────────────────────
-  // Phase 3: Tasks
-  // ─────────────────────────────────────────────
-
-  /**
-   * List open tasks from the configured tasks folder.
-   * @param {Object} [options]
-   * @returns {Promise<Array>} Array of task objects
-   */
-  async tasks(options = {}) {
-    throw new Error('tasks() not yet implemented — coming in Phase 3');
+  _getTaskStore() {
+    if (!this._taskStore) {
+      this._taskStore = new TaskStore(this.vault, this.config);
+    }
+    return this._taskStore;
   }
 }
 
