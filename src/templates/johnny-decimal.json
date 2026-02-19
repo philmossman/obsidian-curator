@@ -1,0 +1,20 @@
+{
+  "name": "Johnny Decimal",
+  "description": "Numeric folder hierarchy. 00-09 for meta/system, then user-defined categories. Customise the folders for your own decimal system.",
+  "structure": {
+    "preset": "johnny-decimal",
+    "folders": {
+      "inbox": "inbox",
+      "meta": "00-09 Meta"
+    },
+    "customFolders": [
+      "10-19 Projects",
+      "20-29 Areas",
+      "30-39 Resources",
+      "40-49 References",
+      "90-99 Archives"
+    ],
+    "rootExceptions": ["Index.md", "Welcome.md", "README.md"],
+    "systemPaths": ["logs/", "ix:"]
+  }
+}

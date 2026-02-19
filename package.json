@@ -1,0 +1,44 @@
+{
+  "name": "obsidian-curator",
+  "version": "0.1.0",
+  "description": "Manage Obsidian vaults via LiveSync CouchDB. AI-enhanced but AI-optional.",
+  "license": "MIT",
+  "author": "Phil Mossman",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/openclaw/obsidian-curator.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "main": "src/index.js",
+  "exports": {
+    ".": {
+      "require": "./src/index.js",
+      "import": "./src/index.mjs"
+    }
+  },
+  "bin": {
+    "obsidian-curator": "./src/cli/index.js"
+  },
+  "files": [
+    "src/",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node test/run-tests.js"
+  },
+  "dependencies": {
+    "nano": "^10.1.4",
+    "date-fns": "^3.6.0"
+  },
+  "keywords": [
+    "obsidian",
+    "couchdb",
+    "livesync",
+    "vault",
+    "notes",
+    "pkm"
+  ]
+}

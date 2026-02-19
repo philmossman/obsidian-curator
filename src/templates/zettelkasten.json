@@ -1,0 +1,17 @@
+{
+  "name": "Zettelkasten",
+  "description": "Slip-box method: atomic notes in the Slipbox, references, projects, and archives.",
+  "structure": {
+    "preset": "zettelkasten",
+    "folders": {
+      "inbox": "inbox",
+      "slipbox": "Slipbox",
+      "references": "References",
+      "projects": "Projects",
+      "archive": "Archives"
+    },
+    "customFolders": [],
+    "rootExceptions": ["Index.md", "Welcome.md", "README.md"],
+    "systemPaths": ["logs/", "ix:"]
+  }
+}

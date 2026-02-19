@@ -1,0 +1,17 @@
+{
+  "name": "PARA",
+  "description": "Projects, Areas, Resources, Archives — Tiago Forte's PARA method.",
+  "structure": {
+    "preset": "para",
+    "folders": {
+      "inbox": "inbox",
+      "projects": "Projects",
+      "areas": "Areas",
+      "resources": "Resources",
+      "archive": "Archives"
+    },
+    "customFolders": [],
+    "rootExceptions": ["Index.md", "Welcome.md", "README.md"],
+    "systemPaths": ["logs/", "ix:"]
+  }
+}

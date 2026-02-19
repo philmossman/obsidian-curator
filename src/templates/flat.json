@@ -1,0 +1,13 @@
+{
+  "name": "Flat",
+  "description": "Minimal structure: just an inbox. Everything else lives at the vault root. Good for small vaults or people who prefer tagging over folders.",
+  "structure": {
+    "preset": "flat",
+    "folders": {
+      "inbox": "inbox"
+    },
+    "customFolders": [],
+    "rootExceptions": ["Index.md", "Welcome.md", "README.md"],
+    "systemPaths": ["logs/", "ix:"]
+  }
+}
