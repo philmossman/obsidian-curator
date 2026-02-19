@@ -38,11 +38,68 @@ class Curator {
    * Capture raw text to the inbox with timestamp frontmatter.
    * @param {string} text - Content to capture
    * @param {Object} [options]
-   * @param {string} [options.source='manual']
+   * @param {string} [options.source='cli']
    * @returns {Promise<string>} Path of the created note
    */
   async capture(text, options = {}) {
-    throw new Error('capture() not yet implemented — coming in Phase 3');
+    if (!text || !text.trim()) {
+      throw new Error('capture() requires non-empty text');
+    }
+
+    const source = options.source || 'cli';
+    const now    = new Date();
+
+    // Build filename: slugified first 6 words + ISO timestamp
+    const slug = Curator._slugify(text);
+    const ts   = Curator._isoStamp(now);        // e.g. 20240315-143022
+    const inboxFolder = (this.config.structure && this.config.structure.folders && this.config.structure.folders.inbox) || 'inbox';
+    const notePath = `${inboxFolder}/${slug}-${ts}.md`;
+
+    const frontmatter = {
+      created: now.toISOString(),
+      source,
+      tags: []
+    };
+
+    const content = this.vault.buildNote(frontmatter, text);
+    await this.vault.writeNote(notePath, content);
+
+    return notePath;
+  }
+
+  /**
+   * Slugify the first few words of a string for use in filenames.
+   * Strips non-alphanumeric chars, lower-cases, joins with hyphens.
+   * @param {string} text
+   * @param {number} [maxWords=6]
+   * @returns {string}
+   */
+  static _slugify(text, maxWords = 6) {
+    return text
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')   // keep alphanumeric, spaces, hyphens
+      .trim()
+      .split(/\s+/)
+      .slice(0, maxWords)
+      .join('-')
+      .replace(/-+/g, '-')             // collapse multiple hyphens
+      .replace(/^-|-$/g, '')           // trim leading/trailing hyphens
+      || 'note';
+  }
+
+  /**
+   * Format a Date as a compact timestamp string suitable for filenames.
+   * e.g. 20240315-143022
+   * @param {Date} date
+   * @returns {string}
+   */
+  static _isoStamp(date) {
+    const pad = n => String(n).padStart(2, '0');
+    return (
+      `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}` +
+      `-${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}`
+    );
   }
 
   // ─────────────────────────────────────────────

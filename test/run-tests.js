@@ -9,6 +9,7 @@
 const runConfigTests = require('./unit/config.test');
 const runAIAdapterTests = require('./unit/ai-adapters.test');
 const runVaultClientTests = require('./unit/vault-client.test');
+const runCLITests = require('./unit/cli.test');
 
 async function main() {
   console.log('obsidian-curator unit tests');
@@ -31,6 +32,11 @@ async function main() {
   const vaultResult = runVaultClientTests();
   totalPassed += vaultResult.passed;
   totalFailed += vaultResult.failed;
+
+  // Async test suite
+  const cliResult = await runCLITests();
+  totalPassed += cliResult.passed;
+  totalFailed += cliResult.failed;
 
   console.log('===========================');
   console.log(`Total: ${totalPassed} passed, ${totalFailed} failed`);
