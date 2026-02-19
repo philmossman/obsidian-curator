@@ -6,11 +6,11 @@
   "author": "Phil Mossman",
   "repository": {
     "type": "git",
-    "url": "https://github.com/openclaw/obsidian-curator.git"
+    "url": "https://github.com/philmossman/obsidian-curator.git"
   },
-  "homepage": "https://github.com/openclaw/obsidian-curator#readme",
+  "homepage": "https://github.com/philmossman/obsidian-curator#readme",
   "bugs": {
-    "url": "https://github.com/openclaw/obsidian-curator/issues"
+    "url": "https://github.com/philmossman/obsidian-curator/issues"
   },
   "engines": {
     "node": ">=18.0.0"

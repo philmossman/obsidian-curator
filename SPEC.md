@@ -18,7 +18,7 @@ Optional OpenClaw skill wrapper for users running OpenClaw agents.
 
 - **npm package:** `obsidian-curator`
 - **ClawHub skill:** `obsidian-curator`
-- **Repository:** `github.com/openclaw/obsidian-curator` (public)
+- **Repository:** `github.com/philmossman/obsidian-curator` (public)
 - **License:** MIT
 
 ---

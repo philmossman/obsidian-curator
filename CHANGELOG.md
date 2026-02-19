@@ -91,4 +91,4 @@ Initial release.
 **Tests**
 - 96 unit tests covering vault client, config, AI adapters, auditor, processor, task parser, tidy scanner, CLI
 
-[0.1.0]: https://github.com/openclaw/obsidian-curator/releases/tag/v0.1.0
+[0.1.0]: https://github.com/philmossman/obsidian-curator/releases/tag/v0.1.0

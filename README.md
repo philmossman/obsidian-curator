@@ -464,12 +464,12 @@ See **[docs/API.md](docs/API.md)** for the full programmatic API.
 
 ## Contributing
 
-PRs and issues welcome at [github.com/openclaw/obsidian-curator](https://github.com/openclaw/obsidian-curator).
+PRs and issues welcome at [github.com/philmossman/obsidian-curator](https://github.com/philmossman/obsidian-curator).
 
 This project follows a "practical first" philosophy: no TypeScript, no bundler, plain CJS Node.js. Keep dependencies minimal.
 
 ```bash
-git clone https://github.com/openclaw/obsidian-curator.git
+git clone https://github.com/philmossman/obsidian-curator.git
 cd obsidian-curator
 npm install
 npm test
