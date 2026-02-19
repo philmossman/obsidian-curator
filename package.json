@@ -34,7 +34,7 @@
     "test": "node test/run-tests.js"
   },
   "dependencies": {
-    "nano": "^10.1.4",
+    "nano": "^11.0.4",
     "date-fns": "^3.6.0"
   },
   "keywords": [
