@@ -1,0 +1,15 @@
+# Development and reference files — not needed by consumers
+reference/
+test/
+docs/
+SPEC.md
+TASK.md
+TASK*.md
+.obsidian-curator.json
+
+# Test files (if any are in src/)
+*.test.js
+
+# Development config
+.gitignore
+.git/
