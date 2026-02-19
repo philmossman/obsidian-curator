@@ -175,6 +175,14 @@ obsidian-curator capture "test note from obsidian-curator"
 # Open Obsidian — the note should appear in your inbox folder
 ```
 
+### View available commands
+
+```bash
+obsidian-curator --help
+```
+
+All commands are documented in the [CLI command reference](../README.md#cli-command-reference).
+
 ---
 
 ## Using a Remote CouchDB
