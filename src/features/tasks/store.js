@@ -9,9 +9,9 @@
  * Usage:
  *   const TaskStore = require('./store');
  *   const store = new TaskStore(vault, config);
- *   await store.createTask({ title: 'Chase the farrier', due: '2026-02-24' });
+ *   await store.createTask({ title: 'Book dentist appointment', due: '2026-02-24' });
  *   const tasks = await store.listTasks({ status: 'open' });
- *   await store.completeTask('farrier');
+ *   await store.completeTask('dentist');
  */
 
 const { format, differenceInDays, addHours } = require('date-fns');
