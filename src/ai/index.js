@@ -43,10 +43,19 @@ function createAIAdapter(config) {
     case 'ollama':
       return new OllamaAdapter(ai);
 
+    case 'openclaw':
+      // OpenClaw provider is handled by the OpenClaw skill wrapper,
+      // not by the core library. If you're seeing this error, you're
+      // using provider: 'openclaw' outside of an OpenClaw agent session.
+      throw new Error(
+        'The "openclaw" AI provider is only available inside the OpenClaw skill wrapper. ' +
+        'Use "openai", "anthropic", "ollama", or "none" instead.'
+      );
+
     default:
       throw new Error(
         `Unknown AI provider: "${provider}". ` +
-        'Supported: none, openai, anthropic, ollama, custom'
+        'Supported: none, openai, anthropic, ollama, custom, openclaw (skill only)'
       );
   }
 }
