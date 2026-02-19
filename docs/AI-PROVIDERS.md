@@ -124,11 +124,12 @@ obsidian-curator config set ai.model gpt-4o-mini
 
 ### Models
 
-| Model | Cost (input) | Quality | Notes |
+| Model | Typical cost | Quality | Notes |
 |-------|-------------|---------|-------|
-| `gpt-4o-mini` | ~$0.15/1M tokens | ★★★★ | **Default — best value** |
-| `gpt-4o` | ~$2.50/1M tokens | ★★★★★ | Highest quality |
-| `gpt-3.5-turbo` | ~$0.50/1M tokens | ★★★ | Cheaper but older |
+| `gpt-4o-mini` | Cheapest | ★★★★ | **Default — best value** |
+| `gpt-4o` | $10–50/month typical | ★★★★★ | Highest quality |
+
+See [OpenAI pricing](https://openai.com/pricing) for current rates.
 
 **Cost estimate per operation:**
 - `process` one note: ~500–1000 tokens = **~$0.0001–0.0002** with `gpt-4o-mini`
@@ -169,14 +170,12 @@ obsidian-curator config set ai.model claude-haiku-4-5
 
 ### Models
 
-| Model | Cost (input) | Quality | Notes |
+| Model | Typical cost | Quality | Notes |
 |-------|-------------|---------|-------|
-| `claude-haiku-4-5` | ~$0.25/1M tokens | ★★★★ | **Default — fast and cheap** |
-| `claude-sonnet-4-5` | ~$3/1M tokens | ★★★★★ | Higher quality |
+| `claude-haiku-4-5` | Cheapest | ★★★★ | **Default — fast and cheap** |
+| `claude-sonnet-4-5` | $20–100/month typical | ★★★★★ | Higher quality |
 
-**Cost estimate per operation:**
-- `process` one note: ~500–1000 tokens = **~$0.0002–0.0003** with Haiku
-- 100 notes: roughly **$0.02–0.03**
+See [Anthropic pricing](https://www.anthropic.com/pricing/claude) for current rates.
 
 ---
 
@@ -200,9 +199,9 @@ Works with any API that speaks the OpenAI chat completions format.
 ```
 
 Popular OpenRouter models for obsidian-curator:
-- `anthropic/claude-3-haiku` — cheap, fast
-- `mistralai/mistral-7b-instruct` — cheap, open
-- `google/gemini-flash-1.5` — cheap, capable
+- `anthropic/claude-haiku-4-5` — cheap, fast, high quality
+- `mistralai/mistral-7b-instruct` — open source, cheap
+- `google/gemini-flash-1.5` — capable, affordable
 
 ### LM Studio
 
@@ -240,16 +239,18 @@ Popular OpenRouter models for obsidian-curator:
 
 ## Setting the API key securely
 
-Instead of putting your API key directly in the config file, you can use an environment variable:
+Always set your API key in the config file:
 
-```bash
-export OPENAI_API_KEY=sk-...
-export ANTHROPIC_API_KEY=sk-ant-...
+```json
+{
+  "ai": {
+    "provider": "openai",
+    "apiKey": "sk-..."
+  }
+}
 ```
 
-obsidian-curator checks these environment variables as a fallback when `apiKey` is not set in config.
-
-For persistent use, add to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.).
+**Keep your config file private.** Don't commit it to git. For team/shared environments, use per-user configs at `~/.obsidian-curator/config.json` (outside the repo).
 
 ---
 

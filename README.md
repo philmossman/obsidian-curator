@@ -66,7 +66,7 @@ Config is saved to `~/.obsidian-curator/config.json`.
 
 ```bash
 obsidian-curator capture "Check out the new Obsidian graph view features"
-# ✓ Captured → inbox/20260219-143022-check-out-the-new.md
+# ✓ Captured to inbox/check-out-the-new-20260219-143022.md
 ```
 
 ### 4. Process inbox (with AI)
@@ -346,7 +346,7 @@ See **[docs/AI-PROVIDERS.md](docs/AI-PROVIDERS.md)** for full setup instructions
     "provider": "openai",
     "apiKey": "sk-or-...",
     "baseUrl": "https://openrouter.ai/api/v1",
-    "model": "anthropic/claude-3-haiku"
+    "model": "anthropic/claude-haiku-4-5"
   }
 }
 ```
