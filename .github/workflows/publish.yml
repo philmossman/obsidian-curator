@@ -11,10 +11,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js 20
+      - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install dependencies
         run: npm ci
@@ -23,7 +23,7 @@ jobs:
         run: npm test
 
   publish:
-    name: Publish to npm (trusted publishing)
+    name: Publish to npm
     needs: test
     runs-on: ubuntu-latest
     permissions:
@@ -33,14 +33,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js 20
+      - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
         run: npm ci
 
       - name: Publish with provenance
+        # NPM_TOKEN is used for the first publish (before trusted publishing is configured).
+        # Once trusted publishing is set up on npmjs.com, the OIDC token takes precedence
+        # and NPM_TOKEN can be removed from repo secrets.
         run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
